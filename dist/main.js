@@ -17,17 +17,28 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const variable_1 = __importDefault(require("./utils/variable"));
 dotenv_1.default.config();
 const VERTOKMIN_APIURL = variable_1.default.VERTOKMIN_APIURL || "";
-function sendVerificationToken(phone, otp, token) {
-    return __awaiter(this, void 0, void 0, function* () {
+function sendVerificationToken(_a) {
+    return __awaiter(this, arguments, void 0, function* ({ phone, otp, token, }) {
         try {
             const body = { phone, otp };
             const response = yield fetch(`${VERTOKMIN_APIURL}`, {
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(body),
             });
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = yield response.text();
+                console.error("Invalid response format:", text);
+                return {
+                    success: false,
+                    message: "Invalid response format from API",
+                    data: text,
+                };
+            }
             const responseData = yield response.json();
             if (responseData.error) {
                 return {
